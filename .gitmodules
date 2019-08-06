@@ -1,0 +1,36 @@
+[submodule "argument-parser"]
+	path = shared-functions/modules/argument-parser
+	url = https://github.com/bash-utilities/argument-parser.git
+	branch = master
+[submodule "trap-failure"]
+	path = shared-functions/modules/trap-failure
+	url = https://github.com/bash-utilities/trap-failure.git
+	branch = master
+[submodule "await-ipv4-address"]
+	path = shared-functions/modules/await-ipv4-address
+	url = https://github.com/network-utilities/await-ipv4-address.git
+	branch = master
+[submodule "await-service-port"]
+	path = shared-functions/modules/await-service-port
+	url = https://github.com/network-utilities/await-service-port.git
+	branch = master
+[submodule "await-interface"]
+	path = shared-functions/modules/await-interface
+	url = https://github.com/network-utilities/await-interface.git
+	branch = master
+[submodule "range-ipv4-address"]
+	path = shared-functions/modules/range-ipv4-address
+	url = https://github.com/network-utilities/range-ipv4-address.git
+	branch = master
+[submodule "iptables-insert-before-logging"]
+	path = shared-functions/modules/iptables-insert-before-logging
+	url = https://github.com/network-utilities/iptables-insert-before-logging.git
+	branch = master
+[submodule "iptables-wipe-chain"]
+	path = shared-functions/modules/iptables-wipe-chain
+	url = https://github.com/network-utilities/iptables-wipe-chain.git
+	branch = master
+[submodule "iptables-check-before"]
+	path = shared-functions/modules/iptables-check-before
+	url = https://github.com/network-utilities/iptables-check-before.git
+	branch = master
