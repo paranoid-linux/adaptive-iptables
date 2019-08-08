@@ -71,7 +71,7 @@ ___
   "&#x1F41A; How to make use of this repository on most Linux systems"
 
 
-The [`base-policies.sh`][source__adaptive_iptables__base_policies] script and each script under the [`interface-protocols`][source__adaptive_iptables__interface_protocols] directory may be run with `--help` argument to output available options.
+The [`base-policies.sh`][source__adaptive_iptables__base_policies] script, and each script under the [`interface-protocols`][source__adaptive_iptables__interface_protocols] and [`services`][source__adaptive_iptables__services] directories may be run with `--help` argument to output available options.
 
 
 ```Bash
@@ -145,6 +145,27 @@ grep -i -- 'put_log' /var/log/messages
 tail -f /var/log/messages | awk '$7 ~ "put_log" {print}'
 ```
 
+
+**Services**
+
+
+1. Install `systemd` template for a given service
+
+2. Enable service firewall rules for a set of interfaces
+
+
+```Bash
+bash services/ssh.sh --install
+
+for _interface in "${_interface_list[@]}"; do
+    bash services/ssh.sh --systemd='enable' --interface="${_interface}"
+done
+```
+
+
+Firewall rules _should_ now be triggered when service **and** interface are available.
+
+
 ___
 
 
@@ -155,16 +176,6 @@ ___
 
 
 Unless other wise stated within an individual script, the scripts within this repository target `iptables` and **not** `ip6tables`
-
-
-Utilize the `interface-protocols/logging.sh` script to debug connections; hint...
-
-
-```Bash
-grep -i -- 'protocol' /var/log/syslog
-
-tail -f /var/log/syslog | grep -i -- 'protocol'
-```
 
 
 ___
@@ -270,6 +281,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 [source__adaptive_iptables__interface_protocols]:
   https://github.com/paranoid-linux/adaptive-iptables/tree/master/interface-protocols
+
+[source__adaptive_iptables__services]:
+  https://github.com/paranoid-linux/adaptive-iptables/tree/master/services
 
 [source__adaptive_iptables__logging]:
   https://github.com/paranoid-linux/adaptive-iptables/blob/master/interface-protocols/logging.sh

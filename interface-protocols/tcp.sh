@@ -27,14 +27,14 @@ __CLIENT_TCP_PORTS__='37,43,80,123,443'
 #
 #    Source useful functions
 #
-source "${__G_PARENT__}/shared-functions/modules/trap-failure/failure.sh.sh"
+source "${__G_PARENT__}/shared-functions/modules/trap-failure/failure.sh"
 trap 'failure "LINENO" "BASH_LINENO" "${BASH_COMMAND}" "${?}"' ERR
 
 source "${__G_PARENT__}/shared-functions/modules/argument-parser/argument-parser.sh"
 source "${__G_PARENT__}/shared-functions/license.sh"
 
 source "${__G_PARENT__}/shared-functions/modules/iptables-check-before/iptables-check-before.sh"
-source "${__G_PARENT__}/shared-functions/modules/iptables-whipe-chain/iptables-whipe-chain.sh"
+source "${__G_PARENT__}/shared-functions/modules/iptables-wipe-chain/iptables-wipe-chain.sh"
 source "${__G_PARENT__}/shared-functions/modules/await-ipv4-address/await-ipv4-address.sh"
 source "${__G_PARENT__}/shared-functions/modules/range-ipv4-address/range-ipv4-address.sh"
 source "${__G_PARENT__}/shared-functions/modules/iptables-insert-before-logging/iptables-insert-before-logging.sh"
@@ -134,8 +134,8 @@ iptables_tcp_chain_log_drop(){
 do_stop(){
     _interfaces="${1}"
     for i in ${_interfaces//,/ }; do
-        iptables_whipe_chain ${i}_input_tcp
-        iptables_whipe_chain ${i}_output_tcp
+        iptables_wipe_chain ${i}_input_tcp
+        iptables_wipe_chain ${i}_output_tcp
     done
 }
 

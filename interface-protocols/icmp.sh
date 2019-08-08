@@ -22,7 +22,7 @@ __IPT_ACCEPT_LIMITS__=('-m' 'limit' '--limit' "10/second" '--limit-burst' "50")
 #
 #    Source useful functions
 #
-source "${__G_PARENT__}/shared-functions/modules/trap-failure/failure.sh.sh"
+source "${__G_PARENT__}/shared-functions/modules/trap-failure/failure.sh"
 trap 'failure "LINENO" "BASH_LINENO" "${BASH_COMMAND}" "${?}"' ERR
 
 source "${__G_PARENT__}/shared-functions/modules/argument-parser/argument-parser.sh"
@@ -51,8 +51,8 @@ source "${__G_PARENT__}/shared-functions/modules/range-ipv4-address/range-ipv4-a
 ## Provides: '--check' before issueing '--append' or '--delete' rules
 source "${__G_PARENT__}/shared-functions/modules/iptables-check-before/iptables-check-before.sh"
 
-## Provides: iptables_whipe_chain <chain>
-source "${__G_PARENT__}/shared-functions/modules/iptables-whipe-chain/iptables-whipe-chain.sh"
+## Provides: iptables_wipe_chain <chain>
+source "${__G_PARENT__}/shared-functions/modules/iptables-wipe-chain/iptables-wipe-chain.sh"
 
 ## Provides: iptables_insert_before_logging (<args>)
 source "${__G_PARENT__}/shared-functions/modules/iptables-insert-before-logging/iptables-insert-before-logging.sh"
@@ -140,8 +140,8 @@ iptables_icmp_rate_limit(){
 do_stop(){
     local _interface="${1:?No interface provided}"
 
-    iptables_whipe_chain "${_interface}_input_icmp"
-    iptables_whipe_chain "${_interface}_output_icmp"
+    iptables_wipe_chain "${_interface}_input_icmp"
+    iptables_wipe_chain "${_interface}_output_icmp"
 
     printf '## %s finished with %s\n' "${FUNCNAME[0]}" "${_interface}"
 }
