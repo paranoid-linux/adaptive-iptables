@@ -65,7 +65,7 @@ usage(){
     local -n _parsed_argument_list="${1}"
     cat <<EOF
 ${__DESCRIPTION__}
-Copyright AGPL-3.0 2019 S0AndS0
+Copyright AGPL-3.0 2019 ${__AUTHOR__}
 
 
 #
