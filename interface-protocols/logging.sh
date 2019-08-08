@@ -35,9 +35,9 @@ source "${__G_PARENT__}/shared-functions/modules/iptables-whipe-chain/iptables-w
 
 
 ## Provides _configurations_ for following variables
-source "${__G_PARENT__}/shared_variables/iptables_logging.vars"
-IPT_LOG_OPTS="${IPT_LOG_OPTS:---log-level 4 --log-ip-options --log-tcp-sequence}"
-IPT_LOG_LIMITS="${IPT_LOG_LIMITS:--m limit --limit 5/m --limit-burst 7}"
+# source "${__G_PARENT__}/shared_variables/iptables_logging.vars"
+__IPT_LOG_OPTS__="${__IPT_LOG_OPTS__:---log-level 4 --log-ip-options --log-tcp-sequence}"
+__IPT_LOG_LIMITS__="${__IPT_LOG_LIMITS__:--m limit --limit 5/m --limit-burst 7}"
 
 
 #
@@ -128,12 +128,12 @@ do_start(){
 
 		for _prot in icmp udp tcp; do
 				_log_prefix="${_interface}_input_log did not accept ${_prot} packet"
-				iptables_check_before -A "${_interface}_input_log" ${IPT_LOG_LIMITS} -m "${_prot}" -p "${_prot}" -j LOG ${IPT_LOG_OPTS} --log-prefix \"${_log_prefix}\"
+				iptables_check_before -A "${_interface}_input_log" ${__IPT_LOG_LIMITS__} -m "${_prot}" -p "${_prot}" -j LOG ${__IPT_LOG_OPTS__} --log-prefix \"${_log_prefix}\"
 		done
 
 		for _prot in icmp udp tcp; do
 				_log_prefix="${_interface}_output_log did not send ${_prot} packet"
-				iptables_check_before -A "${_interface}_output_log" ${IPT_LOG_LIMITS} -m "${_prot}" -p "${_prot}" -j LOG ${IPT_LOG_OPTS} --log-prefix \"${_log_prefix}\"
+				iptables_check_before -A "${_interface}_output_log" ${__IPT_LOG_LIMITS__} -m "${_prot}" -p "${_prot}" -j LOG ${__IPT_LOG_OPTS__} --log-prefix \"${_log_prefix}\"
 		done
 
 		iptables_check_before -A "${_interface}_input_log" -j RETURN

@@ -16,7 +16,7 @@ __PATH__="${__G_PARENT__}/${__NAME__}"
 __AUTHOR__='S0AndS0'
 __DESCRIPTION__="Enables or disables ${__NAME__%.*} filtering for named interface"
 
-IPT_ACCEPT_LIMITS=('-m' 'limit' '--limit' "10/second" '--limit-burst' "50")
+__IPT_ACCEPT_LIMITS__=('-m' 'limit' '--limit' "10/second" '--limit-burst' "50")
 
 
 #
@@ -132,7 +132,7 @@ iptables_icmp_rate_limit(){
 
     local _rule="${_chain_name} -m icmp -p icmp --icmp-type ${_icmp_type}"
 
-    iptables_check_before -A ${_rule} ${IPT_ACCEPT_LIMITS[@]} -j ACCEPT
+    iptables_check_before -A ${_rule} ${__IPT_ACCEPT_LIMITS__[@]} -j ACCEPT
     iptables_check_before -A ${_rule} -j DROP
 }
 
@@ -180,7 +180,7 @@ do_start(){
     iptables_icmp_rate_limit "${_interface}_input_icmp" "parameter-problem"
     ## Allow echo-requests from local NAT only
     if [ -n "${_ip}" ] && [ -n "${_nat_ip_range}" ]; then
-        iptables_check_before -A "${_interface}_input_icmp" -m icmp -p icmp --icmp-type echo-request -s "${_nat_ip_range}" ${IPT_ACCEPT_LIMITS[@]} -j ACCEPT
+        iptables_check_before -A "${_interface}_input_icmp" -m icmp -p icmp --icmp-type echo-request -s "${_nat_ip_range}" ${__IPT_ACCEPT_LIMITS__[@]} -j ACCEPT
         iptables_check_before -A "${_interface}_input_icmp" -m icmp -p icmp --icmp-type echo-request -s "${_nat_ip_range}" -j DROP
     fi
     iptables_check_before -A "${_interface}_input_icmp" -j RETURN
@@ -195,7 +195,7 @@ do_start(){
     iptables_icmp_rate_limit "${_interface}_output_icmp" "timestamp-reply"
     iptables_icmp_rate_limit "${_interface}_output_icmp" "timestamp-request"
     if [ -n "${_ip}" ] && [ -n "${_nat_ip_range}" ]; then
-        iptables_check_before -A "${_interface}_output_icmp" -m icmp -p icmp --icmp-type echo-reply -d "${_nat_ip_range}" ${IPT_ACCEPT_LIMITS[@]} -j ACCEPT
+        iptables_check_before -A "${_interface}_output_icmp" -m icmp -p icmp --icmp-type echo-reply -d "${_nat_ip_range}" ${__IPT_ACCEPT_LIMITS__[@]} -j ACCEPT
         iptables_check_before -A "${_interface}_output_icmp" -m icmp -p icmp --icmp-type echo-reply -d "${_nat_ip_range}" -j DROP
     fi
 

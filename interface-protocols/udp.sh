@@ -17,13 +17,13 @@ __AUTHOR__='S0AndS0'
 __DESCRIPTION__="Enables or disables ${__NAME__%.*} filtering for named interface"
 
 
-IPT_ACCEPT_LIMITS=('-m' 'limit' '--limit' "10/second" '--limit-burst' "50")
+# IPT_ACCEPT_LIMITS=('-m' 'limit' '--limit' "10/second" '--limit-burst' "50")
 
 
 ## Allows time related outbound trafic
-CLIENT_UDP_PORTS='37,123,319,320,525'
+__CLIENT_UDP_PORTS__='37,123,319,320,525'
 ## Allows for quary DNS resolution for given IPs on destination port 53
-CLIENT_NAMESERVERS="$(awk '/nameserver /{print $2}' /etc/resolv.conf)"
+__CLIENT_NAMESERVERS__="$(awk '/nameserver /{print $2}' /etc/resolv.conf)"
 
 
 #
@@ -56,9 +56,6 @@ source "${__G_PARENT__}/shared-functions/systemd/write-systemd-protocol-filter.s
 source "${__G_PARENT__}/shared_variables/iptables_logging.vars"
 source "${__G_PARENT__}/shared_variables/iptables_client_ports.vars"
 
-## Overide default logging variables
-#IPT_LOG_OPTS="--log-level 4 --log-ip-options --log-tcp-sequence"
-#IPT_LOG_LIMITS="-m limit --limit 5/m --limit-burst 7"
 
 #
 #    Script functions
@@ -129,61 +126,61 @@ EOF
 
 
 do_stop(){
-	_interfaces="${1}"
-	for i in ${_interfaces//,/ }; do
-		iptables_whipe_chain ${i}_input_udp
-		iptables_whipe_chain ${i}_output_udp
-	done
+    _interfaces="${1}"
+    for i in ${_interfaces//,/ }; do
+        iptables_whipe_chain ${i}_input_udp
+        iptables_whipe_chain ${i}_output_udp
+    done
 }
 
 do_start(){
-	_name="${1}"
-	_interfaces="${1}"
-	for i in ${_interfaces//,/ }; do
-		_ip="$(await_ipv4_address "${i}")"
-		_nat_ip_range="$(range_ipv4_address "${_ip}")"
-		if ! [ -n "${_ip}" ] || ! [ -n "${_nat_ip_range}" ]; then
-			exit 1
-		fi
-		iptables --new-chain ${i}_input_udp
-		iptables_check_before -A ${i}_input_udp ! -p udp -j RETURN
-		iptables_check_before -A ${i}_input_udp -p udp -m udp -m conntrack --ctstate INVALID -j DROP
-		for n in ${CLIENT_NAMESERVERS}; do
-			iptables_check_before -A ${i}_input_udp -p udp -m udp -s ${n} --sport 53 --match multiport --dports 1024:65535 -m conntrack --ctstate ESTABLISHED -j ACCEPT
-		done
-		for p in ${CLIENT_UDP_PORTS//,/ }; do
-			iptables_check_before -A ${i}_input_udp -p udp -m udp --sport ${p} --match multiport --dports 1024:65535 -m conntrack --ctstate ESTABLISHED -j ACCEPT
-		done
+    _name="${1}"
+    _interfaces="${1}"
+    for i in ${_interfaces//,/ }; do
+        _ip="$(await_ipv4_address "${i}")"
+        _nat_ip_range="$(range_ipv4_address "${_ip}")"
+        if ! [ -n "${_ip}" ] || ! [ -n "${_nat_ip_range}" ]; then
+            exit 1
+        fi
+        iptables --new-chain ${i}_input_udp
+        iptables_check_before -A ${i}_input_udp ! -p udp -j RETURN
+        iptables_check_before -A ${i}_input_udp -p udp -m udp -m conntrack --ctstate INVALID -j DROP
+        for n in ${__CLIENT_NAMESERVERS__}; do
+            iptables_check_before -A ${i}_input_udp -p udp -m udp -s ${n} --sport 53 --match multiport --dports 1024:65535 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+        done
+        for p in ${__CLIENT_UDP_PORTS__//,/ }; do
+            iptables_check_before -A ${i}_input_udp -p udp -m udp --sport ${p} --match multiport --dports 1024:65535 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+        done
 
-    ## DHCP responces are sent from port 67 to 68
-		if [ -n "${_ip}" ] && [ -n "${_nat_ip_range}" ]; then
-			iptables_check_before -A ${i}_input_udp -p udp -m udp --sport 67 --dport 68 -s ${_nat_ip_range} -d ${_ip} -m conntrack --ctstate ESTABLISHED -j ACCEPT
-			iptables_check_before -A ${i}_input_udp -p udp -m udp --sport 67 --dport 68 -s ${_nat_ip_range} -d ${_ip} -m conntrack --ctstate RELATED -j ACCEPT
-		fi
-		iptables_check_before -A ${i}_input_udp -j RETURN
+        ## DHCP responces are sent from port 67 to 68
+        if [ -n "${_ip}" ] && [ -n "${_nat_ip_range}" ]; then
+            iptables_check_before -A ${i}_input_udp -p udp -m udp --sport 67 --dport 68 -s ${_nat_ip_range} -d ${_ip} -m conntrack --ctstate ESTABLISHED -j ACCEPT
+            iptables_check_before -A ${i}_input_udp -p udp -m udp --sport 67 --dport 68 -s ${_nat_ip_range} -d ${_ip} -m conntrack --ctstate RELATED -j ACCEPT
+        fi
+        iptables_check_before -A ${i}_input_udp -j RETURN
 
-		iptables --new-chain ${i}_output_udp
-		iptables_check_before -A ${i}_output_udp ! -p udp -j RETURN
-		for p in ${CLIENT_UDP_PORTS//,/ }; do
-			iptables_check_before -A ${i}_output_udp -p udp -m udp --dport ${p} --match multiport --sports 1024:65535 -m conntrack --ctstate ESTABLISHED -j ACCEPT
-			iptables_check_before -A ${i}_output_udp -p udp -m udp --dport ${p} --match multiport --sports 1024:65535 -m conntrack --ctstate NEW -j ACCEPT
-		done
-		for n in ${CLIENT_NAMESERVERS}; do
-			iptables_check_before -A ${i}_output_udp -p udp -m udp -d ${n} --dport 53 --sport 1024:65535 -m conntrack --ctstate ESTABLISHED -j ACCEPT
-			iptables_check_before -A ${i}_output_udp -p udp -m udp -d ${n} --dport 53 --sport 1024:65535 -m conntrack --ctstate NEW -j ACCEPT
-		done
-		## DHCP requests are sent from port 68 to 67
-		if [ -n "${_ip}" ] && [ -n "${_nat_ip_range}" ]; then
-			iptables_check_before -A ${i}_output_udp -p udp -m udp --dport 67 --sport 68 -d ${_nat_ip_range} -s ${_ip} -m conntrack --ctstate ESTABLISHED -j ACCEPT
-			iptables_check_before -A ${i}_output_udp -p udp -m udp --dport 67 --sport 68 -d ${_nat_ip_range} -s ${_ip} -m conntrack --ctstate RELATED -j ACCEPT
-			iptables_check_before -A ${i}_output_udp -p udp -m udp --dport 67 --sport 68 -d ${_nat_ip_range} -s ${_ip} -m conntrack --ctstate NEW -j ACCEPT
-		fi
-		iptables_check_before -A ${i}_output_udp -j RETURN
+        iptables --new-chain ${i}_output_udp
+        iptables_check_before -A ${i}_output_udp ! -p udp -j RETURN
+        for p in ${__CLIENT_UDP_PORTS__//,/ }; do
+            iptables_check_before -A ${i}_output_udp -p udp -m udp --dport ${p} --match multiport --sports 1024:65535 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+            iptables_check_before -A ${i}_output_udp -p udp -m udp --dport ${p} --match multiport --sports 1024:65535 -m conntrack --ctstate NEW -j ACCEPT
+        done
+        for n in ${__CLIENT_NAMESERVERS__}; do
+            iptables_check_before -A ${i}_output_udp -p udp -m udp -d ${n} --dport 53 --sport 1024:65535 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+            iptables_check_before -A ${i}_output_udp -p udp -m udp -d ${n} --dport 53 --sport 1024:65535 -m conntrack --ctstate NEW -j ACCEPT
+        done
+        ## DHCP requests are sent from port 68 to 67
+        if [ -n "${_ip}" ] && [ -n "${_nat_ip_range}" ]; then
+            iptables_check_before -A ${i}_output_udp -p udp -m udp --dport 67 --sport 68 -d ${_nat_ip_range} -s ${_ip} -m conntrack --ctstate ESTABLISHED -j ACCEPT
+            iptables_check_before -A ${i}_output_udp -p udp -m udp --dport 67 --sport 68 -d ${_nat_ip_range} -s ${_ip} -m conntrack --ctstate RELATED -j ACCEPT
+            iptables_check_before -A ${i}_output_udp -p udp -m udp --dport 67 --sport 68 -d ${_nat_ip_range} -s ${_ip} -m conntrack --ctstate NEW -j ACCEPT
+        fi
+        iptables_check_before -A ${i}_output_udp -j RETURN
 
-		## Link INPUT & OUTPUT to chains
-		iptables_insert_before_logging -A INPUT -i ${i} -p udp -m udp -j ${i}_input_udp
-		iptables_insert_before_logging -A OUTPUT -o ${i} -p udp -m udp -j ${i}_output_udp
-	done
+        ## Link INPUT & OUTPUT to chains
+        iptables_insert_before_logging -A INPUT -i ${i} -p udp -m udp -j ${i}_input_udp
+        iptables_insert_before_logging -A OUTPUT -o ${i} -p udp -m udp -j ${i}_output_udp
+    done
 }
 
 

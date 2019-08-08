@@ -18,7 +18,10 @@ __DESCRIPTION__="Enables or disables ${__NAME__%.*} filtering for named interfac
 
 
 ## Allows for quary DNS resolution for given IPs on destination port 53
-CLIENT_NAMESERVERS="$(awk '/nameserver /{print $2}' /etc/resolv.conf)"
+__CLIENT_NAMESERVERS__="$(awk '/nameserver /{print $2}' /etc/resolv.conf)"
+
+## Allows time, whois and http(s) outbound trafic
+__CLIENT_TCP_PORTS__='37,43,80,123,443'
 
 
 #
@@ -51,8 +54,6 @@ source "${__G_PARENT__}/shared-functions/systemd/write-systemd-protocol-filter.s
 source "${__G_PARENT__}/shared_variables/iptables_logging.vars"
 source "${__G_PARENT__}/shared_variables/iptables_client_ports.vars"
 
-## Allows time, whois and http(s) outbound trafic
-CLIENT_TCP_PORTS='37,43,80,123,443'
 
 #
 #    Script functions
@@ -123,88 +124,89 @@ EOF
 
 
 iptables_tcp_chain_log_drop(){
-	_chain_name="${1:?No chain name provided to iptables_tcp_chain_log_drop}"
-	_tcp_flags="${2:?No TCP flags provided to iptables_tcp_chain_log_drop}"
-	_log_prefix="${3:-$_chain_name Dropped}"
-	iptables_check_before -A ${_chain_name} -p tcp --tcp-flags ${_tcp_flags} -j DROP
+    _chain_name="${1:?No chain name provided to iptables_tcp_chain_log_drop}"
+    _tcp_flags="${2:?No TCP flags provided to iptables_tcp_chain_log_drop}"
+    _log_prefix="${3:-$_chain_name Dropped}"
+    iptables_check_before -A ${_chain_name} -p tcp --tcp-flags ${_tcp_flags} -j DROP
 }
 
 
 do_stop(){
-	_interfaces="${1}"
-	for i in ${_interfaces//,/ }; do
-		iptables_whipe_chain ${i}_input_tcp
-		iptables_whipe_chain ${i}_output_tcp
-	done
+    _interfaces="${1}"
+    for i in ${_interfaces//,/ }; do
+        iptables_whipe_chain ${i}_input_tcp
+        iptables_whipe_chain ${i}_output_tcp
+    done
 }
 
 
 do_start(){
-	_interfaces="${1}"
-	for i in ${_interfaces//,/ }; do
-		_ip="$(await_ipv4_address "${i}")"
-		_nat_ip_range="$(range_ipv4_address "${_ip}")"
-		if ! [ -n "${_ip}" ] || ! [ -n "${_nat_ip_range}" ]; then
-			exit 1
-		fi
-		iptables --new-chain ${i}_input_tcp
-		iptables_check_before -A ${i}_input_tcp ! -p tcp -j RETURN
-		## New packets claming to be responce packets, or second in three-way handshake
-		iptables_check_before -A ${i}_input_tcp -m tcp -p tcp --tcp-flags SYN,ACK SYN,ACK -m conntrack --ctstate NEW -j DROP
-		## Bad packets
-		iptables_tcp_chain_log_drop "${i}_input_tcp" "ALL ALL"
-		iptables_tcp_chain_log_drop "${i}_input_tcp" "ACK,PSH PSH"
-		iptables_tcp_chain_log_drop "${i}_input_tcp" "ACK,URG URG"
-		iptables_tcp_chain_log_drop "${i}_input_tcp" "ACK,FIN FIN"
-		iptables_tcp_chain_log_drop "${i}_input_tcp" "ALL SYN,RST,ACK,FIN,URG"
-		iptables_tcp_chain_log_drop "${i}_input_tcp" "SYN,RST SYN,RST"
-		iptables_tcp_chain_log_drop "${i}_input_tcp" "SYN,FIN,PSH SYN,FIN,PSH"
-		iptables_tcp_chain_log_drop "${i}_input_tcp" "SYN,FIN,RST SYN,FIN,RST"
-		iptables_tcp_chain_log_drop "${i}_input_tcp" "SYN,FIN,RST,PSH SYN,FIN,RST,PSH"
-		## XMAS port scanning methods for TCP
-		iptables_tcp_chain_log_drop "${i}_input_tcp" "ALL FIN,URG,PSH" "${i}_input_tcp Port Scan XMAS"
-		iptables_tcp_chain_log_drop "${i}_input_tcp" "SYN,FIN SYN,FIN" "${i}_input_tcp Port Scan XMAS"
-		iptables_tcp_chain_log_drop "${i}_input_tcp" "ALL SYN,RST,ACK,FIN,URG" "${i}_input_tcp Port Scan XMAS"
-		## Varous other port scanning methods for TCP
-		iptables_tcp_chain_log_drop "${i}_input_tcp" "ALL NONE" "${i}_input_tcp Port Scan NULL"
-		iptables_tcp_chain_log_drop "${i}_input_tcp" "FIN,ACK FIN" "${i}_input_tcp Port Scan"
-		iptables_tcp_chain_log_drop "${i}_input_tcp" "FIN,RST FIN,RST" "${i}_input_tcp Port Scan"
-		## May want to move the following two nearer to the top of this chain
-		iptables_check_before -A ${i}_input_tcp -m tcp -p tcp -m conntrack --ctstate INVALID -j DROP
-		## Now for some packets to accept
-		for n in ${CLIENT_NAMESERVERS}; do
-			iptables_check_before -A ${i}_input_tcp -m tcp -p tcp -m conntrack --ctstate ESTABLISHED -s ${n} --sport 53 --match multiport --dports 1024:65535 -j ACCEPT
-		done
-		for p in ${CLIENT_TCP_PORTS//,/ }; do
-			iptables_check_before -A ${i}_input_tcp -m tcp -p tcp -m conntrack --ctstate ESTABLISHED --sport ${p} --match multiport --dports 1024:65535 -j ACCEPT
-		done
-		if [ -n "${_ip}" ] && [ -n "${_nat_ip_range}" ]; then
-			iptables_check_before -A ${i}_input_tcp -m tcp -p tcp --sport 67 --dport 68 -s ${_nat_ip_range} -d ${_ip} -m conntrack --ctstate ESTABLISHED -j ACCEPT
-			iptables_check_before -A ${i}_input_tcp -m tcp -p tcp --sport 67 --dport 68 -s ${_nat_ip_range} -d ${_ip} -m conntrack --ctstate RELATED -j ACCEPT
-		fi
-		iptables_check_before -A ${i}_input_tcp -j RETURN
+    _interfaces="${1}"
+    for i in ${_interfaces//,/ }; do
+        _ip="$(await_ipv4_address "${i}")"
+        _nat_ip_range="$(range_ipv4_address "${_ip}")"
+        if [ -z "${_ip}" ] || [ -z "${_nat_ip_range}" ]; then
+            printf '%s cannot find IP for %s\n' "${__NAME__}" "${i}" >&2
+            return 1
+        fi
+        iptables --new-chain ${i}_input_tcp
+        iptables_check_before -A ${i}_input_tcp ! -p tcp -j RETURN
+        ## New packets claming to be responce packets, or second in three-way handshake
+        iptables_check_before -A ${i}_input_tcp -m tcp -p tcp --tcp-flags SYN,ACK SYN,ACK -m conntrack --ctstate NEW -j DROP
+        ## Bad packets
+        iptables_tcp_chain_log_drop "${i}_input_tcp" "ALL ALL"
+        iptables_tcp_chain_log_drop "${i}_input_tcp" "ACK,PSH PSH"
+        iptables_tcp_chain_log_drop "${i}_input_tcp" "ACK,URG URG"
+        iptables_tcp_chain_log_drop "${i}_input_tcp" "ACK,FIN FIN"
+        iptables_tcp_chain_log_drop "${i}_input_tcp" "ALL SYN,RST,ACK,FIN,URG"
+        iptables_tcp_chain_log_drop "${i}_input_tcp" "SYN,RST SYN,RST"
+        iptables_tcp_chain_log_drop "${i}_input_tcp" "SYN,FIN,PSH SYN,FIN,PSH"
+        iptables_tcp_chain_log_drop "${i}_input_tcp" "SYN,FIN,RST SYN,FIN,RST"
+        iptables_tcp_chain_log_drop "${i}_input_tcp" "SYN,FIN,RST,PSH SYN,FIN,RST,PSH"
+        ## XMAS port scanning methods for TCP
+        iptables_tcp_chain_log_drop "${i}_input_tcp" "ALL FIN,URG,PSH" "${i}_input_tcp Port Scan XMAS"
+        iptables_tcp_chain_log_drop "${i}_input_tcp" "SYN,FIN SYN,FIN" "${i}_input_tcp Port Scan XMAS"
+        iptables_tcp_chain_log_drop "${i}_input_tcp" "ALL SYN,RST,ACK,FIN,URG" "${i}_input_tcp Port Scan XMAS"
+        ## Varous other port scanning methods for TCP
+        iptables_tcp_chain_log_drop "${i}_input_tcp" "ALL NONE" "${i}_input_tcp Port Scan NULL"
+        iptables_tcp_chain_log_drop "${i}_input_tcp" "FIN,ACK FIN" "${i}_input_tcp Port Scan"
+        iptables_tcp_chain_log_drop "${i}_input_tcp" "FIN,RST FIN,RST" "${i}_input_tcp Port Scan"
+        ## May want to move the following two nearer to the top of this chain
+        iptables_check_before -A ${i}_input_tcp -m tcp -p tcp -m conntrack --ctstate INVALID -j DROP
+        ## Now for some packets to accept
+        for n in ${__CLIENT_NAMESERVERS__}; do
+            iptables_check_before -A ${i}_input_tcp -m tcp -p tcp -m conntrack --ctstate ESTABLISHED -s ${n} --sport 53 --match multiport --dports 1024:65535 -j ACCEPT
+        done
+        for p in ${__CLIENT_TCP_PORTS__//,/ }; do
+            iptables_check_before -A ${i}_input_tcp -m tcp -p tcp -m conntrack --ctstate ESTABLISHED --sport ${p} --match multiport --dports 1024:65535 -j ACCEPT
+        done
+        if [ -n "${_ip}" ] && [ -n "${_nat_ip_range}" ]; then
+            iptables_check_before -A ${i}_input_tcp -m tcp -p tcp --sport 67 --dport 68 -s ${_nat_ip_range} -d ${_ip} -m conntrack --ctstate ESTABLISHED -j ACCEPT
+            iptables_check_before -A ${i}_input_tcp -m tcp -p tcp --sport 67 --dport 68 -s ${_nat_ip_range} -d ${_ip} -m conntrack --ctstate RELATED -j ACCEPT
+        fi
+        iptables_check_before -A ${i}_input_tcp -j RETURN
 
-		iptables --new-chain ${i}_output_tcp
-		iptables_check_before -A ${i}_output_tcp ! -p tcp -j RETURN
-		for n in ${CLIENT_NAMESERVERS}; do
-			iptables_check_before -A ${i}_output_tcp -m tcp -p tcp -m conntrack --ctstate ESTABLISHED -d ${n} --dport 53 --match multiport --sports 1024:65535 -j ACCEPT
-			iptables_check_before -A ${i}_output_tcp -m tcp -p tcp -m conntrack --ctstate NEW -d ${n} --dport 53 --match multiport --sports 1024:65535 -j ACCEPT
-		done
-		for p in ${CLIENT_TCP_PORTS//,/ }; do
-			iptables_check_before -A ${i}_output_tcp -m tcp -p tcp -m conntrack --ctstate ESTABLISHED --dport ${p} --match multiport --sports 1024:65535 -j ACCEPT
-			iptables_check_before -A ${i}_output_tcp -m tcp -p tcp -m conntrack --ctstate NEW --dport ${p} --match multiport --sports 1024:65535 -j ACCEPT
-		done
-		if [ -n "${_ip}" ] && [ -n "${_nat_ip_range}" ]; then
-			iptables_check_before -A ${i}_output_tcp -m tcp -p tcp --dport 67 --sport 68 -d ${_nat_ip_range} -s ${_ip} -m conntrack --ctstate ESTABLISHED -j ACCEPT
-			iptables_check_before -A ${i}_output_tcp -m tcp -p tcp --dport 67 --sport 68 -d ${_nat_ip_range} -s ${_ip} -m conntrack --ctstate RELATED -j ACCEPT
-			iptables_check_before -A ${i}_output_tcp -m tcp -p tcp --dport 67 --sport 68 -d ${_nat_ip_range} -s ${_ip} -m conntrack --ctstate NEW -j ACCEPT
-		fi
-		iptables_check_before -A ${i}_output_tcp -j RETURN
+        iptables --new-chain ${i}_output_tcp
+        iptables_check_before -A ${i}_output_tcp ! -p tcp -j RETURN
+        for n in ${__CLIENT_NAMESERVERS__}; do
+            iptables_check_before -A ${i}_output_tcp -m tcp -p tcp -m conntrack --ctstate ESTABLISHED -d ${n} --dport 53 --match multiport --sports 1024:65535 -j ACCEPT
+            iptables_check_before -A ${i}_output_tcp -m tcp -p tcp -m conntrack --ctstate NEW -d ${n} --dport 53 --match multiport --sports 1024:65535 -j ACCEPT
+        done
+        for p in ${__CLIENT_TCP_PORTS__//,/ }; do
+            iptables_check_before -A ${i}_output_tcp -m tcp -p tcp -m conntrack --ctstate ESTABLISHED --dport ${p} --match multiport --sports 1024:65535 -j ACCEPT
+            iptables_check_before -A ${i}_output_tcp -m tcp -p tcp -m conntrack --ctstate NEW --dport ${p} --match multiport --sports 1024:65535 -j ACCEPT
+        done
+        if [ -n "${_ip}" ] && [ -n "${_nat_ip_range}" ]; then
+            iptables_check_before -A ${i}_output_tcp -m tcp -p tcp --dport 67 --sport 68 -d ${_nat_ip_range} -s ${_ip} -m conntrack --ctstate ESTABLISHED -j ACCEPT
+            iptables_check_before -A ${i}_output_tcp -m tcp -p tcp --dport 67 --sport 68 -d ${_nat_ip_range} -s ${_ip} -m conntrack --ctstate RELATED -j ACCEPT
+            iptables_check_before -A ${i}_output_tcp -m tcp -p tcp --dport 67 --sport 68 -d ${_nat_ip_range} -s ${_ip} -m conntrack --ctstate NEW -j ACCEPT
+        fi
+        iptables_check_before -A ${i}_output_tcp -j RETURN
 
-		## Link INPUT & OUTPUT to chains
-		iptables_insert_before_logging -A INPUT -i ${i} -p tcp -j ${i}_input_tcp
-		iptables_insert_before_logging -A OUTPUT -o ${i} -p tcp -j ${i}_output_tcp
-	done
+        ## Link INPUT & OUTPUT to chains
+        iptables_insert_before_logging -A INPUT -i ${i} -p tcp -j ${i}_input_tcp
+        iptables_insert_before_logging -A OUTPUT -o ${i} -p tcp -j ${i}_output_tcp
+    done
 }
 
 #
