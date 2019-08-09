@@ -163,7 +163,7 @@ done
 ```
 
 
-Firewall rules _should_ now be triggered when service **and** interface are available.
+Firewall rules _should_ be started when service **and** interface are available, and stopped when **either** are unavailable.
 
 
 ___
@@ -176,6 +176,12 @@ ___
 
 
 Unless other wise stated within an individual script, the scripts within this repository target `iptables` and **not** `ip6tables`
+
+
+The [`tcp.sh`][source__adaptive_iptables__tcp] filters will log specific types of dropped packets and is intended to be used with `fail2ban` (or similar firewall management software). Future revisions may include a command-line option to toggle logging behaviors.
+
+
+Some services, such as OpenVPN, require setting additional command-line options; please review the `--help` documentation for details.
 
 
 ___
@@ -282,8 +288,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 [source__adaptive_iptables__interface_protocols]:
   https://github.com/paranoid-linux/adaptive-iptables/tree/master/interface-protocols
 
-[source__adaptive_iptables__services]:
-  https://github.com/paranoid-linux/adaptive-iptables/tree/master/services
+[source__adaptive_iptables__icmp]:
+  https://github.com/paranoid-linux/adaptive-iptables/blob/master/interface-protocols/icmp.sh
 
 [source__adaptive_iptables__logging]:
   https://github.com/paranoid-linux/adaptive-iptables/blob/master/interface-protocols/logging.sh
+
+[source__adaptive_iptables__tcp]:
+  https://github.com/paranoid-linux/adaptive-iptables/blob/master/interface-protocols/tcp.sh
+
+[source__adaptive_iptables__udp]:
+  https://github.com/paranoid-linux/adaptive-iptables/blob/master/interface-protocols/udp.sh
+
+
+
+[source__adaptive_iptables__services]:
+  https://github.com/paranoid-linux/adaptive-iptables/tree/master/services

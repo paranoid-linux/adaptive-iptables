@@ -26,36 +26,17 @@ source "${__G_PARENT__}/shared-functions/modules/trap-failure/failure.sh"
 trap 'failure "LINENO" "BASH_LINENO" "${BASH_COMMAND}" "${?}"' ERR
 
 source "${__G_PARENT__}/shared-functions/modules/argument-parser/argument-parser.sh"
-source "${__G_PARENT__}/shared-functions/license.sh"
-
-
-## Provides: await_ipv4_address <interface>
 source "${__G_PARENT__}/shared-functions/modules/await-ipv4-address/await-ipv4-address.sh"
-
-## Provides: disable_systemd_template <name> <target>
-source "${__G_PARENT__}/shared-functions/systemd/disable-systemd-template.sh"
-
-## Provides: enable_systemd_template <name> <target>
-source "${__G_PARENT__}/shared-functions/systemd/enable-systemd-template.sh"
-
-## Provides: erase_systemd_protocol_filter <protocal>
-source "${__G_PARENT__}/shared-functions/systemd/erase-systemd-protocol-filter.sh"
-
-## Provides: write_systemd_protocol_filter <protocal>
-source "${__G_PARENT__}/shared-functions/systemd/write-systemd-protocol-filter.sh"
-
-## Provides: range_ipv4_address <ip>
+source "${__G_PARENT__}/shared-functions/modules/iptables-check-before/iptables-check-before.sh"
+source "${__G_PARENT__}/shared-functions/modules/iptables-insert-before-logging/iptables-insert-before-logging.sh"
+source "${__G_PARENT__}/shared-functions/modules/iptables-wipe-chain/iptables-wipe-chain.sh"
 source "${__G_PARENT__}/shared-functions/modules/range-ipv4-address/range-ipv4-address.sh"
 
-
-## Provides: '--check' before issueing '--append' or '--delete' rules
-source "${__G_PARENT__}/shared-functions/modules/iptables-check-before/iptables-check-before.sh"
-
-## Provides: iptables_wipe_chain <chain>
-source "${__G_PARENT__}/shared-functions/modules/iptables-wipe-chain/iptables-wipe-chain.sh"
-
-## Provides: iptables_insert_before_logging (<args>)
-source "${__G_PARENT__}/shared-functions/modules/iptables-insert-before-logging/iptables-insert-before-logging.sh"
+source "${__G_PARENT__}/shared-functions/license.sh"
+source "${__G_PARENT__}/shared-functions/systemd/disable-systemd-template.sh"
+source "${__G_PARENT__}/shared-functions/systemd/enable-systemd-template.sh"
+source "${__G_PARENT__}/shared-functions/systemd/erase-systemd-protocol-filter.sh"
+source "${__G_PARENT__}/shared-functions/systemd/write-systemd-protocol-filter.sh"
 
 
 #

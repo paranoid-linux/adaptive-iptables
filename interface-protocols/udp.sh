@@ -17,9 +17,6 @@ __AUTHOR__='S0AndS0'
 __DESCRIPTION__="Enables or disables ${__NAME__%.*} filtering for named interface"
 
 
-# IPT_ACCEPT_LIMITS=('-m' 'limit' '--limit' "10/second" '--limit-burst' "50")
-
-
 ## Allows time related outbound trafic
 __CLIENT_UDP_PORTS__='37,123,319,320,525'
 ## Allows for quary DNS resolution for given IPs on destination port 53
@@ -33,28 +30,17 @@ source "${__G_PARENT__}/shared-functions/modules/trap-failure/failure.sh"
 trap 'failure "LINENO" "BASH_LINENO" "${BASH_COMMAND}" "${?}"' ERR
 
 source "${__G_PARENT__}/shared-functions/modules/argument-parser/argument-parser.sh"
-source "${__G_PARENT__}/shared-functions/license.sh"
-
-source "${__G_PARENT__}/shared-functions/modules/iptables-check-before/iptables-check-before.sh"
-source "${__G_PARENT__}/shared-functions/modules/iptables-wipe-chain/iptables-wipe-chain.sh"
 source "${__G_PARENT__}/shared-functions/modules/await-ipv4-address/await-ipv4-address.sh"
-source "${__G_PARENT__}/shared-functions/modules/range-ipv4-address/range-ipv4-address.sh"
+source "${__G_PARENT__}/shared-functions/modules/iptables-check-before/iptables-check-before.sh"
 source "${__G_PARENT__}/shared-functions/modules/iptables-insert-before-logging/iptables-insert-before-logging.sh"
+source "${__G_PARENT__}/shared-functions/modules/iptables-wipe-chain/iptables-wipe-chain.sh"
+source "${__G_PARENT__}/shared-functions/modules/range-ipv4-address/range-ipv4-address.sh"
 
-## Provides: disable_systemd_template <name> <target>
+source "${__G_PARENT__}/shared-functions/license.sh"
 source "${__G_PARENT__}/shared-functions/systemd/disable-systemd-template.sh"
-
-## Provides: enable_systemd_template <name> <target>
 source "${__G_PARENT__}/shared-functions/systemd/enable-systemd-template.sh"
-
-## Provides: erase_systemd_protocol_filter <protocal>
 source "${__G_PARENT__}/shared-functions/systemd/erase-systemd-protocol-filter.sh"
-
-## Provides: write_systemd_protocol_filter <protocal>
 source "${__G_PARENT__}/shared-functions/systemd/write-systemd-protocol-filter.sh"
-
-source "${__G_PARENT__}/shared_variables/iptables_logging.vars"
-source "${__G_PARENT__}/shared_variables/iptables_client_ports.vars"
 
 
 #

@@ -28,11 +28,11 @@ source "${__G_PARENT__}/shared-functions/modules/trap-failure/failure.sh"
 trap 'failure "LINENO" "BASH_LINENO" "${BASH_COMMAND}" "${?}"' ERR
 
 source "${__G_PARENT__}/shared-functions/modules/argument-parser/argument-parser.sh"
-source "${__G_PARENT__}/shared-functions/modules/iptables-check-before/iptables-check-before.sh"
-source "${__G_PARENT__}/shared-functions/modules/iptables-wipe-chain/iptables-wipe-chain.sh"
 source "${__G_PARENT__}/shared-functions/modules/await-ipv4-address/await-ipv4-address.sh"
-source "${__G_PARENT__}/shared-functions/modules/range-ipv4-address/range-ipv4-address.sh"
+source "${__G_PARENT__}/shared-functions/modules/iptables-check-before/iptables-check-before.sh"
 source "${__G_PARENT__}/shared-functions/modules/iptables-insert-before-logging/iptables-insert-before-logging.sh"
+source "${__G_PARENT__}/shared-functions/modules/iptables-wipe-chain/iptables-wipe-chain.sh"
+source "${__G_PARENT__}/shared-functions/modules/range-ipv4-address/range-ipv4-address.sh"
 
 source "${__G_PARENT__}/shared-functions/systemd/erase-systemd-protocol-filter.sh"
 source "${__G_PARENT__}/shared-functions/systemd/write-systemd-service-filter.sh"
