@@ -13,8 +13,6 @@ if [ -z "${__GG_PARENT__}" ]; then
 fi
 
 
-## Restarting named service should also bring along iptables hooks
-
 write_systemd_service_filter(){    ## write_systemd_service_filter <service> script_directory
     local _service_name="${1:?${FUNCNAME[0]} not provided a service name}"
     local _script_dir="${2:-${__GG_PARENT__}/services}"
@@ -31,7 +29,7 @@ write_systemd_service_filter(){    ## write_systemd_service_filter <service> scr
     local _systemd_path="${__SYSTEMD_DIR__}/iptables-${_service_name}@.service"
     if [ -f "${_systemd_path}" ]; then
         printf 'Configuration already exists %s\n' "${_systemd_path}" >&2
-        exit 1
+        return 1
     fi
 
     tee "${_systemd_path}" 1>/dev/null <<EOF
@@ -54,6 +52,4 @@ ExecReload=${_script_path} 'reload' '%i'
 [Install]
 WantedBy=${_service_name}.service sys-subsystem-net-devices-%i.device
 EOF
-
-		printf '## %s finished\n' "${FUNCNAME[0]}"
 }

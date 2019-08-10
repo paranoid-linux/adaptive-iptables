@@ -9,9 +9,9 @@ erase_systemd_protocol_filter(){    ## erase_systemd_protocol_filter <protocal>
 
     local _systemd_path="${__SYSTEMD_DIR__}/iptables-${_protocal}@.service"
     if ! [ -f "${_systemd_path}" ]; then
+        printf 'No file found at: %s\n' "${_systemd_path}" >&2
         return 1
     fi
-    rm -v "${_systemd_path}" || return "${?}"
 
-    printf '## %s finished\n' "${FUNCNAME[0]}"
+    rm -v "${_systemd_path}"
 }

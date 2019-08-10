@@ -27,6 +27,7 @@ write_systemd_protocol_filter(){    ## write_systemd_protocol_filter <protocal>
 
     local _systemd_path="${__SYSTEMD_DIR__}/iptables-${_protocal}@.service"
     if [ -f "${_systemd_path}" ]; then
+        printf 'Configuration already exists %s\n' "${_systemd_path}" >&2
         return 1
     fi
 
@@ -50,6 +51,4 @@ ExecReload='${_script_path}' 'reload' '%i'
 [Install]
 WantedBy=${__BASE_FILTER_NAME__}.service sys-subsystem-net-devices-%i.device
 EOF
-
-    printf '## %s finished\n' "${FUNCNAME[0]}"
 }
