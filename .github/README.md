@@ -7,7 +7,7 @@
 Scripts triggered by `systemd` for modifying `iptables` firewall rules.
 
 
-## [![Byte size of adaptive-iptables.py][badge__master__adaptive_iptables__source_code]][adaptive_iptables__master__source_code] [![Open Issues][badge__issues__adaptive_iptables]][issues__adaptive_iptables] [![Open Pull Requests][badge__pull_requests__adaptive_iptables]][pull_requests__adaptive_iptables] [![Latest commits][badge__commits__adaptive_iptables__master]][commits__adaptive_iptables__master]
+## [![Byte size of adaptive-iptables][badge__master__adaptive_iptables__source_code]][adaptive_iptables__master__source_code] [![Open Issues][badge__issues__adaptive_iptables]][issues__adaptive_iptables] [![Open Pull Requests][badge__pull_requests__adaptive_iptables]][pull_requests__adaptive_iptables] [![Latest commits][badge__commits__adaptive_iptables__master]][commits__adaptive_iptables__master]
 
 
 
