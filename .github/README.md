@@ -47,7 +47,7 @@ Scripts triggered by `systemd` for modifying `iptables` firewall rules.
 sudo su -
 cd /usr/local/etc
 
-git clone git@github.com:paranoid-linux/adaptive-iptables.git
+git clone --recurse-submodules git@github.com:paranoid-linux/adaptive-iptables.git
 ```
 
 
