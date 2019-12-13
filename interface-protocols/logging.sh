@@ -33,6 +33,11 @@ source "${__G_PARENT__}/shared-functions/modules/iptables-check-before/iptables-
 ## Provides: iptables_wipe_chain <chain>
 source "${__G_PARENT__}/shared-functions/modules/iptables-wipe-chain/iptables-wipe-chain.sh"
 
+source "${__G_PARENT__}/shared-functions/systemd/disable-systemd-template.sh"
+source "${__G_PARENT__}/shared-functions/systemd/enable-systemd-template.sh"
+source "${__G_PARENT__}/shared-functions/systemd/erase-systemd-protocol-filter.sh"
+source "${__G_PARENT__}/shared-functions/systemd/write-systemd-protocol-filter.sh"
+
 
 ## Provides _configurations_ for following variables
 # source "${__G_PARENT__}/shared_variables/iptables_logging.vars"
@@ -104,45 +109,45 @@ Shows script or project license then exits
 Shows values set for above options, print usage, then exits
 EOF
     if (("${#_parsed_argument_list[@]}")); then
-				printf '\n\n#\n#    Parsed Options\n#\n\n\n'
-        printf '    %s\n' "${_parsed_argument_list[@]}"
+      printf '\n\n#\n#    Parsed Options\n#\n\n\n'
+      printf '    %s\n' "${_parsed_argument_list[@]}"
     fi
 }
 
 
 do_stop(){
-		local _interface="${1:?No interface provided}"
+    local _interface="${1:?No interface provided}"
 
     iptables_wipe_chain "${_interface}_input_log"
     iptables_wipe_chain "${_interface}_output_log"
 
-		printf '## %s finished with %s\n' "${FUNCNAME[0]}" "${_interface}"
+    printf '## %s finished with %s\n' "${FUNCNAME[0]}" "${_interface}"
 }
 
 
 do_start(){
-		local _interface="${1:?No interface provided}"
+    local _interface="${1:?No interface provided}"
 
-		iptables --new-chain "${_interface}_input_log"
-		iptables --new-chain "${_interface}_output_log"
+    iptables --new-chain "${_interface}_input_log"
+    iptables --new-chain "${_interface}_output_log"
 
-		for _prot in icmp udp tcp; do
-				_log_prefix="${_interface}_input_log did not accept ${_prot} packet"
-				iptables_check_before -A "${_interface}_input_log" ${__IPT_LOG_LIMITS__} -m "${_prot}" -p "${_prot}" -j LOG ${__IPT_LOG_OPTS__} --log-prefix \"${_log_prefix}\"
-		done
+    for _prot in icmp udp tcp; do
+        _log_prefix="${_interface}_input_log did not accept ${_prot} packet"
+        iptables_check_before -A "${_interface}_input_log" ${__IPT_LOG_LIMITS__} -m "${_prot}" -p "${_prot}" -j LOG ${__IPT_LOG_OPTS__} --log-prefix \"${_log_prefix}\"
+    done
 
-		for _prot in icmp udp tcp; do
-				_log_prefix="${_interface}_output_log did not send ${_prot} packet"
-				iptables_check_before -A "${_interface}_output_log" ${__IPT_LOG_LIMITS__} -m "${_prot}" -p "${_prot}" -j LOG ${__IPT_LOG_OPTS__} --log-prefix \"${_log_prefix}\"
-		done
+    for _prot in icmp udp tcp; do
+        _log_prefix="${_interface}_output_log did not send ${_prot} packet"
+        iptables_check_before -A "${_interface}_output_log" ${__IPT_LOG_LIMITS__} -m "${_prot}" -p "${_prot}" -j LOG ${__IPT_LOG_OPTS__} --log-prefix \"${_log_prefix}\"
+    done
 
-		iptables_check_before -A "${_interface}_input_log" -j RETURN
-		iptables_check_before -A "${_interface}_output_log" -j RETURN
+    iptables_check_before -A "${_interface}_input_log" -j RETURN
+    iptables_check_before -A "${_interface}_output_log" -j RETURN
 
-		iptables_check_before -A INPUT -i ${i} -j "${_interface}_input_log"
-		iptables_check_before -A OUTPUT -o ${i} -j "${_interface}_output_log"
+    iptables_check_before -A INPUT -i ${i} -j "${_interface}_input_log"
+    iptables_check_before -A OUTPUT -o ${i} -j "${_interface}_output_log"
 
-		printf '## %s finished with %s\n' "${FUNCNAME[0]}" "${_interface}"
+    printf '## %s finished with %s\n' "${FUNCNAME[0]}" "${_interface}"
 }
 
 

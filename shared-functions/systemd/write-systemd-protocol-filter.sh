@@ -16,7 +16,7 @@ fi
 write_systemd_protocol_filter(){    ## write_systemd_protocol_filter <protocal>
     local _protocal="${1:?${FUNCNAME[0]} not provided a protocal}"
 
-    local _script_path="${__GG_PARENT__}/${_protocal}.sh"
+    local _script_path="${__GG_PARENT__}/interface-protocols/${_protocal}.sh"
     if ! [ -f "${_script_path}" ]; then
         printf 'No script at: %s\n' "${_script_path}" >&2
         return 1

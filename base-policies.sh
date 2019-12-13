@@ -125,7 +125,9 @@ erase_systemd_base_filter(){
 
 
 write_systemd_base_filter(){
-    local _systemd_path="${__SYSTEMD_DIR__}/iptables-${_protocal}.service"
+    local _name="${__NAME__%.*}"
+    _name="${_name//[_ ]/-}"
+    local _systemd_path="${__SYSTEMD_DIR__}/iptables-${_name}.service"
 
     if [ -f "${_systemd_path}" ]; then
         printf 'Configuration for systemd already exsists: %s\n' "${_systemd_path}" >&2
@@ -171,17 +173,17 @@ disable_systemd_base_filter(){
 
 
 enable_systemd_base_filter(){
-  local _name="${__NAME__//[ _]/-}"
-  local _path="${__SYSTEMD_DIR__}/iptables-${_name%.*}.service"
+    local _name="${__NAME__//[ _]/-}"
+    local _path="${__SYSTEMD_DIR__}/iptables-${_name%.*}.service"
 
-  if ! [ -f "${_path}" ]; then
-      printf 'No file found at: %s\n' "${_path}" >&2
-      return 1
-  fi
+    if ! [ -f "${_path}" ]; then
+        printf 'No file found at: %s\n' "${_path}" >&2
+        return 1
+    fi
 
-  systemctl enable iptables-${_name}.service
+    systemctl enable iptables-${_name%.*}.service
 
-  printf '## %s finished\n' "${FUNCNAME[0]}"
+    printf '## %s finished\n' "${FUNCNAME[0]}"
 }
 
 

@@ -34,8 +34,9 @@ source "${__G_PARENT__}/shared-functions/modules/iptables-insert-before-logging/
 source "${__G_PARENT__}/shared-functions/modules/iptables-wipe-chain/iptables-wipe-chain.sh"
 source "${__G_PARENT__}/shared-functions/modules/range-ipv4-address/range-ipv4-address.sh"
 
-source "${__G_PARENT__}/shared-functions/systemd/erase-systemd-protocol-filter.sh"
-source "${__G_PARENT__}/shared-functions/systemd/write-systemd-service-filter.sh"
+source "${__G_PARENT__}/shared-functions/systemd/erase-systemd-service-filter.sh"
+source "${__G_PARENT__}/shared-functions/systemd/disable-systemd-template.sh"
+source "${__G_PARENT__}/shared-functions/systemd/enable-systemd-template.sh"
 source "${__G_PARENT__}/shared-functions/license.sh"
 
 
